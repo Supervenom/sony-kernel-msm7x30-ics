@@ -110,6 +110,38 @@ config CPU_FREQ_DEFAULT_GOV_CONSERVATIVE
 	  Be aware that not all cpufreq drivers support the conservative
 	  governor. If unsure have a look at the help section of the
 	  driver. Fallback governor will be the performance governor.
+
+config CPU_FREQ_DEFAULT_GOV_SMARTASS
+	bool "smartass"
+	select CPU_FREQ_GOV_SMARTASS
+	help
+	  Use the CPUFreq governor 'smartass' as default.
+
+config CPU_FREQ_DEFAULT_GOV_SMARTASS2
+	bool "smartassV2"
+	select CPU_FREQ_GOV_SMARTASS2
+	help
+	  Use the CPUFreq governor 'smartass' as default.
+
+config CPU_FREQ_DEFAULT_GOV_INTERACTIVEX
+	bool "interactiveX"
+	select CPU_FREQ_GOV_INTERACTIVEX
+	help
+	  Use the CPUFreq governor 'interactiveX' as default.
+
+config CPU_FREQ_DEFAULT_GOV_SAVAGEDZEN
+	bool "SavagedZen"
+	select CPU_FREQ_GOV_SAVAGEDZEN
+	help
+	  Use the CPUFreq governor 'SavagedZen' as default.
+
+config CPU_FREQ_DEFAULT_GOV_SCARY
+	bool "Scary"
+	select CPU_FREQ_GOV_SCARY
+	help
+	  Use the CPUFreq governor 'Scary' as default.
+
+
 endchoice
 
 config CPU_FREQ_DEFAULT_GOV_INTERACTIVE
@@ -204,5 +236,30 @@ config CPU_FREQ_GOV_INTERACTIVE
 	  'interactive' - This driver adds a dynamic cpufreq policy governor.
 	  Designed for low latency burst workloads. Scaling it done when coming
 	  out of idle instead of polling.
+
+config CPU_FREQ_GOV_SMARTASS
+	tristate "'smartass' cpufreq governor"
+	help
+	  smartass cpufreq governor.
+
+config CPU_FREQ_GOV_SMARTASS2
+	tristate "'smartassV2' cpufreq governor"
+	help
+	  smartassV2 cpufreq governor.
+
+config CPU_FREQ_GOV_INTERACTIVEX
+	tristate "'interactiveX' cpufreq governor"
+	help
+	  interactiveX cpufreq governor.
+
+config CPU_FREQ_GOV_SAVAGEDZEN
+	tristate "'SavagedZen' cpufreq governor"
+	help
+	  SavagedZen cpufreq governor.
+
+config CPU_FREQ_GOV_SCARY
+	tristate "'Scary' cpufreq governor"
+	help
+	  Scary cpufreq governor.
 
 endif	# CPU_FREQ
