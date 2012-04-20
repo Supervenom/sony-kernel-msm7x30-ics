@@ -113,9 +113,11 @@
 
 #define MSM_PMEM_SF_SIZE	0x1E00000
 #define MSM_FB_SIZE		0x500000
+#define MSM_GPU_PHYS_SIZE       SZ_4M
 #define MSM_PMEM_CAMERA_SIZE    0x2000000
-#define MSM_PMEM_ADSP_SIZE      0x1000000
+#define MSM_PMEM_ADSP_SIZE      0x1800000
 #define PMEM_KERNEL_EBI1_SIZE   0x600000
+#define MSM_PMEM_AUDIO_SIZE     0x200000
 
 #define PMIC_GPIO_INT		27
 #define PMIC_VREG_WLAN_LEVEL	2900
@@ -235,8 +237,10 @@ static int pm8058_gpios_init(void)
 static const unsigned int keymap_game[] = {
 	KEY(7, 0, KEY_VOLUMEUP),   /* DBZ2, VOL_UP */
 	KEY(7, 1, KEY_VOLUMEDOWN), /* DBZ2, VOL_DOWN */
+#ifdef CONFIG_INPUT_JOYSTICK
 	KEY(7, 2, BTN_SELECT),     /* DBZ2, S1 */
 	KEY(7, 3, KEY_ENTER),      /* DBZ2, S2 */
+#endif
 };
 
 static struct resource resources_keypad_game[] = {
@@ -1919,6 +1923,12 @@ static struct android_pmem_platform_data android_pmem_camera_pdata = {
 	.cached = 0,
 };
 
+static struct android_pmem_platform_data android_pmem_audio_pdata = {
+	.name = "pmem_audio",
+	.allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
+	.cached = 0,
+};
+
 static struct platform_device android_pmem_kernel_ebi1_device = {
 	.name = "android_pmem",
 	.id = 1,
@@ -1935,6 +1945,12 @@ static struct platform_device android_pmem_camera_device = {
 	.name = "android_pmem",
 	.id = 3,
 	.dev = {.platform_data = &android_pmem_camera_pdata},
+};
+
+static struct platform_device android_pmem_audio_device = {
+	.name = "android_pmem",
+	.id = 4,
+	.dev = {.platform_data = &android_pmem_audio_pdata},
 };
 
 struct kgsl_cpufreq_voter {
@@ -1978,14 +1994,17 @@ static struct kgsl_device_platform_data kgsl_3d0_pdata = {
 			{
 				.gpu_freq = 245760000,
 				.bus_freq = 192000000,
+				.io_fraction = 0,
 			},
 			{
 				.gpu_freq = 192000000,
 				.bus_freq = 152000000,
+				.io_fraction = 33,
 			},
 			{
 				.gpu_freq = 192000000,
 				.bus_freq = 0,
+				.io_fraction = 100,
 			},
 		},
 		.init_level = 0,
@@ -2063,7 +2082,6 @@ struct platform_device msm_kgsl_2d0 = {
 		.platform_data = &kgsl_2d0_pdata,
 	},
 };
-
 
 static int msm_fb_mddi_sel_clk(u32 *clk_rate)
 {
@@ -2500,6 +2518,7 @@ static struct platform_device *devices[] __initdata = {
 	&android_pmem_kernel_ebi1_device,
 	&android_pmem_adsp_device,
 	&android_pmem_camera_device,
+	&android_pmem_audio_device,
 	&msm_device_i2c,
 	&msm_device_i2c_2,
 	&msm_device_uart_dm1,
@@ -3395,6 +3414,14 @@ static void __init fb_size_setup(char **p)
 
 __early_param("fb_size=", fb_size_setup);
 
+static unsigned gpu_phys_size = MSM_GPU_PHYS_SIZE;
+static void __init gpu_phys_size_setup(char **p)
+{
+	gpu_phys_size = memparse(*p, p);
+}
+
+__early_param("gpu_phys_size=", gpu_phys_size_setup);
+
 static unsigned pmem_adsp_size = MSM_PMEM_ADSP_SIZE;
 static void __init pmem_adsp_size_setup(char **p)
 {
@@ -3410,6 +3437,14 @@ static void __init pmem_camera_size_setup(char **p)
 }
 
 __early_param("pmem_camera_size=", pmem_camera_size_setup);
+
+static unsigned pmem_audio_size = MSM_PMEM_AUDIO_SIZE;
+static void __init pmem_audio_size_setup(char **p)
+{
+	pmem_audio_size = memparse(*p, p);
+}
+
+__early_param("pmem_audio_size=", pmem_audio_size_setup);
 
 static unsigned pmem_kernel_ebi1_size = PMEM_KERNEL_EBI1_SIZE;
 static void __init pmem_kernel_ebi1_size_setup(char **p)
@@ -3456,6 +3491,15 @@ static void __init msm7x30_allocate_memory_regions(void)
 		android_pmem_camera_pdata.start = __pa(addr);
 		android_pmem_camera_pdata.size = size;
 		pr_info("allocating %lu bytes at %p (%lx physical) for camera "
+			"pmem arena\n", size, addr, __pa(addr));
+	}
+
+	size = pmem_audio_size;
+	if (size) {
+		addr = alloc_bootmem(size);
+		android_pmem_audio_pdata.start = __pa(addr);
+		android_pmem_audio_pdata.size = size;
+		pr_info("allocating %lu bytes at %p (%lx physical) for audio "
 			"pmem arena\n", size, addr, __pa(addr));
 	}
 
