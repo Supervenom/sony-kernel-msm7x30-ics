@@ -1349,7 +1349,7 @@ static struct as3676_platform_data as3676_platform_data = {
 	.leds = as3676_pdata_leds,
 	.num_leds = ARRAY_SIZE(as3676_pdata_leds),
 	.als_config = &as3676_als_config,
-	.als_connected = 1,
+	.als_connected = 0,
 	.dls_connected = 1,
 };
 
